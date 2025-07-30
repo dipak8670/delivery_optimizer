@@ -1,0 +1,67 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.pkl
+*.log
+
+# Virtual environments
+.env
+venv/
+.venv/
+env/
+ENV/
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test output
+htmlcov/
+coverage.xml
+*.cover
+*.py,cover
+.cache
+
+# Docker
+*.tar
+*.img
+*.pid
+*.bak
+
+# FastAPI
+instance/
+app.db
+
+# Jupyter
+.ipynb_checkpoints
+
+# MyPy, Pylint, Bandit, Black
+.mypy_cache/
+.pytest_cache/
+.cache/
+.tox/
+*.lint
+
+# Editor backups
+*~
+*.swp
+*.tmp
+
+# Distribution
+build/
+dist/
+*.egg-info/
+
+# Env config
+.env.local
+.env.*
+*.env
