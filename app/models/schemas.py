@@ -7,9 +7,9 @@ class Location(BaseModel):
     longitude: float = Field(..., ge=-180, le=180, description="Longitude")
 
 
-class Restuarant(BaseModel):
-    name: str = Field(..., min_length=1, description="Restuarant Name")
-    location: Location = Field(..., description="Location of the restuarant")
+class Restaurant(BaseModel):
+    name: str = Field(..., min_length=1, description="Restaurant Name")
+    location: Location = Field(..., description="Location of the restaurant")
     prep_time: float = Field(..., gt=0)
 
 
@@ -19,7 +19,7 @@ class Customer(BaseModel):
 
 
 class Order(BaseModel):
-    restuarant: Restuarant
+    restaurant: Restaurant
     customer: Customer
 
 
@@ -31,7 +31,7 @@ class DeliveryRequest(BaseModel):
 class RouteStep(BaseModel):
     action: Literal["pickup", "deliver"]
     location: Location
-    restuarant_name: Optional[str] = None
+    restaurant_name: Optional[str] = None
     customer_name: Optional[str] = None
     travel_time_minutes: float
     wait_time_minutes: Optional[float] = None
