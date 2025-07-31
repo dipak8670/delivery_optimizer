@@ -10,7 +10,6 @@ class Location(BaseModel):
 class Restaurant(BaseModel):
     name: str = Field(..., min_length=1, description="Restaurant Name")
     location: Location = Field(..., description="Location of the restaurant")
-    prep_time: float = Field(..., gt=0)
 
 
 class Customer(BaseModel):
@@ -21,6 +20,7 @@ class Customer(BaseModel):
 class Order(BaseModel):
     restaurant: Restaurant
     customer: Customer
+    prep_time: float = Field(..., gt=0)
 
 
 class DeliveryRequest(BaseModel):

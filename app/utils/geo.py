@@ -1,4 +1,4 @@
-import math
+from math import radians, cos, sin, sqrt, atan2
 from typing import Optional
 from app.models.schemas import Location
 
@@ -9,19 +9,19 @@ def haversine_distance_km(loc1: Optional[Location], loc2: Optional[Location]):
 
     R = 6371.0
 
-    lat1, lon1 = loc1.latitude, loc1.longitude
-    lat2, lon2 = loc2.latitude, loc2.longitude
+    lat1, lon1 = radians(loc1.latitude), radians(loc1.longitude)
+    lat2, lon2 = radians(loc2.latitude), radians(loc2.longitude)
 
-    phi1 = math.radians(lat1)
-    phi2 = math.radians(lat2)
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
 
-    delta_phi = math.radians(lat2 - lat1)
-    delta_lambda = math.radians(lon2 - lon1)
-
-    a = (
-        math.sin(delta_phi / 2) ** 2
-        + math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda / 2) ** 2
-    )
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
 
     return R * c
+
+
+def calculate_travel_time(
+    distance_km: float, speed_kmph: float = 20.0
+) -> float:  # noqa: E501
+    return round((distance_km / speed_kmph) * 60, 2)
