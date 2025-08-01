@@ -1,7 +1,6 @@
 from typing import List
 from app.models.schemas import DeliveryRequest, RouteStep, DeliveryResponse
-from app.utils.geo import haversine_distance_km
-from app.utils.time import calculate_travel_time
+from app.utils.geo import haversine_distance_km, calculate_travel_time
 
 
 class DeliveryOptimizer:
@@ -9,56 +8,59 @@ class DeliveryOptimizer:
         self.speed_kmph = speed_kmph
 
     def optimize_route(self, request: DeliveryRequest) -> DeliveryResponse:
-        route_steps: List[RouteStep] = []
-        current_time = 0.0
+        orders = request.orders
         current_location = request.delivery_start_location
+        delivery_steps: List[RouteStep] = []
+        total_time = 0.0
 
-        picked_orders = set()
+        while orders:
+            best_order = None
+            best_total_time = float("inf")
+            best_step_pair = None
 
-        orders_sorted = sorted(
-            request.orders, key=lambda order: order.restaurant.prep_time
-        )
-
-        for order in orders_sorted:
-            rest = order.restaurant
-            dist = haversine_distance_km(current_location, rest.location)
-            travel_time = calculate_travel_time(dist, self.speed_kmph)
-
-            arrival_time = current_time + travel_time
-            wait_time = max(0, rest.prep_time - arrival_time)
-
-            route_steps.append(
-                RouteStep(
-                    action="pickup",
-                    location=rest.location,
-                    restaurant_name=rest.name,
-                    travel_time_minutes=travel_time,
-                    wait_time_minutes=wait_time,
+            for order in orders:
+                dist_to_rest = haversine_distance_km(
+                    current_location, order.restaurant.location
                 )
-            )
-
-            current_time += travel_time + wait_time
-            current_location = rest.location
-            picked_orders.add(order.customer.name)
-
-        for order in orders_sorted:
-            cust = order.customer
-            dist = haversine_distance_km(current_location, cust.location)
-            travel_time = calculate_travel_time(dist, self.speed_kmph)
-
-            route_steps.append(
-                RouteStep(
-                    action="deliver",
-                    location=cust.location,
-                    customer_name=cust.name,
-                    travel_time_minutes=travel_time,
+                travel_time_to_rest = calculate_travel_time(
+                    dist_to_rest, self.speed_kmph
                 )
-            )
+                arrival_time_at_rest = total_time + travel_time_to_rest
 
-            current_time += travel_time
-            current_location = cust.location
+                wait_time = max(0, order.prep_time - arrival_time_at_rest)
+
+                dist_to_cust = haversine_distance_km(
+                    order.restaurant.location, order.customer.location
+                )
+                travel_time_to_cust = calculate_travel_time(dist_to_cust)
+
+                total_order_time = travel_time_to_rest + wait_time + travel_time_to_cust    # noqa : E501
+
+                if total_order_time < best_total_time:
+                    best_total_time = total_order_time
+                    best_order = order
+                    best_step_pair = [
+                        RouteStep(
+                            action="pickup",
+                            location=order.restaurant.location,
+                            restaurant_name=order.restaurant.name,
+                            travel_time_minutes=round(travel_time_to_rest, 2),
+                            wait_time_minutes=round(wait_time, 2),
+                        ),
+                        RouteStep(
+                            action="deliver",
+                            location=order.customer.location,
+                            customer_name=order.customer.name,
+                            travel_time_minutes=round(travel_time_to_cust, 2),
+                        ),
+                    ]
+            current_location = best_order.customer.location
+            total_time += best_total_time
+
+            delivery_steps.extend(best_step_pair)
+            orders.remove(best_order)
 
         return DeliveryResponse(
-            total_delivery_time_minutes=round(current_time, 2),
-            detailed_steps=route_steps,
+            total_delivery_time_minutes=round(total_time, 2),
+            detailed_steps=delivery_steps,
         )
